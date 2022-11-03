@@ -4,15 +4,15 @@
 
 mod cortex_m_interrupt {
 
-    pub trait InterruptRegistration {
+    pub trait InterruptRegistration<T> {
+        const VECTOR: T; // Holds vector name for compiletime errors
+
         fn on_interrupt();
     }
 
     /// This is implemented by codegen, `T` is needed as this crate does not
     /// know the type of the PAC that will be used.
-    pub trait InterruptHandle<T> {
-        const VECTOR: T; // Holds vector name for compiletime errors
-
+    pub trait InterruptHandle {
         fn activate(self); // Enable the registered interrupt
 
         fn override_priority(&mut self, priority: u8); // New priority
@@ -49,7 +49,7 @@ pub mod hal {
     impl Spi {
         pub fn new<Handle>(spi: pac::SPI0, interrupt_handle: Handle) -> Self
         where
-            Handle: InterruptHandle<pac::Interrupt>,
+            Handle: InterruptHandle,
         {
             // const_assert!(Handle::VECTOR == pac::Interrupt::SpiIsr);
 
@@ -61,7 +61,9 @@ pub mod hal {
         }
     }
 
-    impl InterruptRegistration for Spi {
+    impl InterruptRegistration<pac::Interrupt> for Spi {
+        const VECTOR: pac::Interrupt = pac::Interrupt::Spi0;
+
         // It might have a dependency that you can't call `handle.activate()`
         // until peripheral setup is complete.
         fn on_interrupt() {
@@ -85,17 +87,22 @@ pub fn test() {
     // => codegen
 
     let handle = {
+        const _CHECK: () = {
+            match <hal::Spi as InterruptRegistration<pac::Interrupt>>::VECTOR {
+                pac::Interrupt::Spi0 => {}
+                _ => panic!("Wrong vector"),
+            }
+        };
+
         #[export_name = "Spi0"]
         #[allow(non_snake_case)]
         pub unsafe extern "C" fn interrupt() {
-            <hal::Spi as InterruptRegistration>::on_interrupt();
+            <hal::Spi as InterruptRegistration<pac::Interrupt>>::on_interrupt();
         }
 
         struct Handle(u8);
 
-        impl InterruptHandle<hal::pac::Interrupt> for Handle {
-            const VECTOR: hal::pac::Interrupt = hal::pac::Interrupt::Spi0;
-
+        impl InterruptHandle for Handle {
             fn activate(self) {
                 // TODO: Poke the NVIC
                 // - enable interrupts
