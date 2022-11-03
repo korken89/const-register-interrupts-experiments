@@ -145,6 +145,12 @@ pub mod hal {
 pub fn test() {
     use crate::cortex_m_interrupt::{InterruptRegistration, InterruptToken};
 
+    //
+    //
+    // Single interrupt example
+    //
+    //
+
     // let handle = register_interrupt!(
     // 	hal::pac::Interrupt::Spi0, // Full path to interrupt to register to
     // 	hal::Spi, // Struct implementing `InterruptRegistration`
@@ -175,6 +181,12 @@ pub fn test() {
     };
 
     let spi = hal::Spi::new(pac::SPI0 {}, handle);
+
+    //
+    //
+    // Multi (shared) interrupt example
+    //
+    //
 
     // let handle = register_interrupt!(
     // 	hal::pac::Interrupt::Uart0_1, // Full path to interrupt to register to
@@ -217,6 +229,12 @@ pub fn test() {
 
     let uart0 = hal::Uart0::new(pac::UART0 {}, handle2);
     let uart1 = hal::Uart1::new(pac::UART1 {}, handle2);
+
+    //
+    //
+    // Error example
+    //
+    //
 
     let uart2 = hal::Uart2::new(pac::UART2 {}, handle2); // this fails
 }
