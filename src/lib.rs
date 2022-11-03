@@ -31,13 +31,15 @@ pub mod pac {
 
     pub struct UART1;
 
+    pub struct UART2;
+
     pub enum Interrupt {
         Int1,
         Int2,
         Int3,
         Spi0,
         Uart0_1,
-        Uart3,
+        Uart2,
     }
 }
 
@@ -107,6 +109,27 @@ pub mod hal {
 
     impl InterruptRegistration<pac::Interrupt> for Uart1 {
         const VECTOR: pac::Interrupt = pac::Interrupt::Uart0_1;
+
+        // It might have a dependency that you can't call `handle.activate()`
+        // until peripheral setup is complete.
+        fn on_interrupt() {
+            // Doing stuff ...
+        }
+    }
+
+    pub struct Uart2 {}
+
+    impl Uart2 {
+        pub fn new<Handle>(uart: pac::UART2, interrupt_handle: Handle) -> Self
+        where
+            Handle: InterruptToken<Uart2>,
+        {
+            Uart2 {}
+        }
+    }
+
+    impl InterruptRegistration<pac::Interrupt> for Uart2 {
+        const VECTOR: pac::Interrupt = pac::Interrupt::Uart2;
 
         // It might have a dependency that you can't call `handle.activate()`
         // until peripheral setup is complete.
@@ -194,4 +217,6 @@ pub fn test() {
 
     let uart0 = hal::Uart0::new(pac::UART0 {}, handle2);
     let uart1 = hal::Uart1::new(pac::UART1 {}, handle2);
+
+    let uart2 = hal::Uart2::new(pac::UART2 {}, handle2); // this fails
 }
