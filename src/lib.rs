@@ -3,18 +3,15 @@
 //
 
 mod cortex_m_interrupt {
-
+    /// This trait is implemented by the HAL.
     pub trait InterruptRegistration<Vector> {
         const VECTOR: Vector; // Holds vector name for compiletime errors
 
         fn on_interrupt();
     }
 
-    pub trait InterruptToken<Periperhal> {
-        // fn activate(self); // Enable the registered interrupt
-
-        // fn override_priority(&mut self, priority: u8); // New priority
-    }
+    /// This trait is implemented by the proc-macro.
+    pub unsafe trait InterruptToken<Periperhal> {}
 }
 
 //
@@ -89,8 +86,6 @@ pub mod hal {
     impl InterruptRegistration<pac::Interrupt> for Uart0 {
         const VECTOR: pac::Interrupt = pac::Interrupt::Uart0_1;
 
-        // It might have a dependency that you can't call `handle.activate()`
-        // until peripheral setup is complete.
         fn on_interrupt() {
             // Doing stuff ...
         }
@@ -110,8 +105,6 @@ pub mod hal {
     impl InterruptRegistration<pac::Interrupt> for Uart1 {
         const VECTOR: pac::Interrupt = pac::Interrupt::Uart0_1;
 
-        // It might have a dependency that you can't call `handle.activate()`
-        // until peripheral setup is complete.
         fn on_interrupt() {
             // Doing stuff ...
         }
@@ -131,8 +124,6 @@ pub mod hal {
     impl InterruptRegistration<pac::Interrupt> for Uart2 {
         const VECTOR: pac::Interrupt = pac::Interrupt::Uart2;
 
-        // It might have a dependency that you can't call `handle.activate()`
-        // until peripheral setup is complete.
         fn on_interrupt() {
             // Doing stuff ...
         }
@@ -174,7 +165,7 @@ pub fn test() {
 
         struct Handle(u8);
 
-        impl InterruptToken<hal::Spi> for Handle {}
+        unsafe impl InterruptToken<hal::Spi> for Handle {}
 
         Handle(3) // prio goes here
     };
@@ -219,8 +210,8 @@ pub fn test() {
         #[derive(Copy, Clone)]
         struct Handle;
 
-        impl InterruptToken<hal::Uart0> for Handle {}
-        impl InterruptToken<hal::Uart1> for Handle {}
+        unsafe impl InterruptToken<hal::Uart0> for Handle {}
+        unsafe impl InterruptToken<hal::Uart1> for Handle {}
 
         Handle {}
     };
