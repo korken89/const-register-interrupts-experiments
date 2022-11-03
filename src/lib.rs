@@ -152,9 +152,8 @@ pub fn test() {
     //
 
     // let handle = register_interrupt!(
-    // 	hal::pac::Interrupt::Spi0, // Full path to interrupt to register to
-    // 	hal::Spi, // Struct implementing `InterruptRegistration`
-    // 	3, // Optional priority
+    //     hal::pac::Interrupt::Spi0, // Full path to interrupt to register to
+    //     hal::Spi, // Struct implementing `InterruptRegistration`
     // );
 
     // => codegen
@@ -189,9 +188,8 @@ pub fn test() {
     //
 
     // let handle = register_interrupt!(
-    // 	hal::pac::Interrupt::Uart0_1, // Full path to interrupt to register to
-    // 	hal::Uart0, hal::Uart1, // Struct implementing `InterruptRegistration`
-    // 	2, // Optional priority
+    //     hal::pac::Interrupt::Uart0_1, // Full path to interrupt to register to
+    //     hal::Uart0, hal::Uart1, // Struct implementing `InterruptRegistration`
     // );
 
     // => codegen
