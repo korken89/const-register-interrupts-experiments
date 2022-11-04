@@ -10,14 +10,14 @@ mod cortex_m_interrupt {
         fn on_interrupt();
     }
 
-    /// This trait is implemented by the proc-macro.
+    /// This trait is implemented by the proc-macro on the token.
     pub unsafe trait InterruptToken<Periperhal> {}
 }
 
 //
 // HAL impl
 //
-// This takes an interrupt handle and checks that the correct
+// This takes an interrupt token and checks that the correct
 // handler was registered.
 //
 
@@ -50,9 +50,9 @@ pub mod hal {
     }
 
     impl Spi {
-        pub fn new<Handle>(spi: pac::SPI0, interrupt_handle: Handle) -> Self
+        pub fn new<Token>(spi: pac::SPI0, interrupt_token: Token) -> Self
         where
-            Handle: InterruptToken<Spi>,
+            Token: InterruptToken<Spi>,
         {
             Spi {}
         }
@@ -61,8 +61,6 @@ pub mod hal {
     impl InterruptRegistration<pac::Interrupt> for Spi {
         const VECTOR: pac::Interrupt = pac::Interrupt::Spi0;
 
-        // It might have a dependency that you can't call `handle.activate()`
-        // until peripheral setup is complete.
         fn on_interrupt() {
             // Doing stuff ...
         }
@@ -75,9 +73,9 @@ pub mod hal {
     pub struct Uart0 {}
 
     impl Uart0 {
-        pub fn new<Handle>(uart: pac::UART0, interrupt_handle: Handle) -> Self
+        pub fn new<Token>(uart: pac::UART0, interrupt_token: Token) -> Self
         where
-            Handle: InterruptToken<Uart0>,
+            Token: InterruptToken<Uart0>,
         {
             Uart0 {}
         }
@@ -94,9 +92,9 @@ pub mod hal {
     pub struct Uart1 {}
 
     impl Uart1 {
-        pub fn new<Handle>(uart: pac::UART1, interrupt_handle: Handle) -> Self
+        pub fn new<Token>(uart: pac::UART1, interrupt_token: Token) -> Self
         where
-            Handle: InterruptToken<Uart1>,
+            Token: InterruptToken<Uart1>,
         {
             Uart1 {}
         }
@@ -113,9 +111,9 @@ pub mod hal {
     pub struct Uart2 {}
 
     impl Uart2 {
-        pub fn new<Handle>(uart: pac::UART2, interrupt_handle: Handle) -> Self
+        pub fn new<Token>(uart: pac::UART2, interrupt_token: Token) -> Self
         where
-            Handle: InterruptToken<Uart2>,
+            Token: InterruptToken<Uart2>,
         {
             Uart2 {}
         }
@@ -142,14 +140,14 @@ pub fn test() {
     //
     //
 
-    // let handle = register_interrupt!(
+    // let token = register_interrupt!(
     //     hal::pac::Interrupt::Spi0, // Full path to interrupt to register to
     //     hal::Spi, // Struct implementing `InterruptRegistration`
     // );
 
     // => codegen
 
-    let handle = {
+    let token = {
         const _CHECK: () = {
             match <hal::Spi as InterruptRegistration<pac::Interrupt>>::VECTOR {
                 pac::Interrupt::Spi0 => {}
@@ -163,14 +161,14 @@ pub fn test() {
             <hal::Spi as InterruptRegistration<pac::Interrupt>>::on_interrupt();
         }
 
-        struct Handle(u8);
+        struct Token(u8);
 
-        unsafe impl InterruptToken<hal::Spi> for Handle {}
+        unsafe impl InterruptToken<hal::Spi> for Token {}
 
-        Handle(3) // prio goes here
+        Token(3) // prio goes here
     };
 
-    let spi = hal::Spi::new(pac::SPI0 {}, handle);
+    let spi = hal::Spi::new(pac::SPI0 {}, token);
 
     //
     //
@@ -178,14 +176,14 @@ pub fn test() {
     //
     //
 
-    // let handle = register_interrupt!(
+    // let token = register_interrupt!(
     //     hal::pac::Interrupt::Uart0_1, // Full path to interrupt to register to
     //     hal::Uart0, hal::Uart1, // Struct implementing `InterruptRegistration`
     // );
 
     // => codegen
 
-    let handle2 = {
+    let token2 = {
         const _: () = {
             match <hal::Uart0 as InterruptRegistration<pac::Interrupt>>::VECTOR {
                 pac::Interrupt::Uart0_1 => {}
@@ -208,16 +206,16 @@ pub fn test() {
         }
 
         #[derive(Copy, Clone)]
-        struct Handle;
+        struct Token;
 
-        unsafe impl InterruptToken<hal::Uart0> for Handle {}
-        unsafe impl InterruptToken<hal::Uart1> for Handle {}
+        unsafe impl InterruptToken<hal::Uart0> for Token {}
+        unsafe impl InterruptToken<hal::Uart1> for Token {}
 
-        Handle {}
+        Token {}
     };
 
-    let uart0 = hal::Uart0::new(pac::UART0 {}, handle2);
-    let uart1 = hal::Uart1::new(pac::UART1 {}, handle2);
+    let uart0 = hal::Uart0::new(pac::UART0 {}, token2);
+    let uart1 = hal::Uart1::new(pac::UART1 {}, token2);
 
     //
     //
@@ -225,5 +223,5 @@ pub fn test() {
     //
     //
 
-    let uart2 = hal::Uart2::new(pac::UART2 {}, handle2); // this fails
+    let uart2 = hal::Uart2::new(pac::UART2 {}, token2); // this fails
 }
